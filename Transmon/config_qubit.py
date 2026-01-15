@@ -270,7 +270,7 @@ qubit_LO = {qubit_LO} MHz
 qubit_IF = {qubit_IF} MHz
 
 #### Long square "saturation" pulse (`saturation`)
-saturation_len = {saturation_length}
+saturation_len = {saturation_len}
 saturation_amp = {saturation_amp}
 
 #### Square pulse (`pi`, `pi_half`)
