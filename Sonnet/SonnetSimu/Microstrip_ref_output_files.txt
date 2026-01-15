@@ -1,0 +1,38 @@
+! Summary of output files for parameterized project.
+!
+! Project: Microstrip_ref.son
+! Folder:  C:\Users\gabelli\Desktop\Radio_frequency_electronics_Formation_continue\Sonnet_files&Python_script\Microstrip
+! Date:    05/20/2025 14:19:08
+
+FTYP POFL 1
+HDATE 12/30/2024 21:26:45
+
+
+USER_FILE Microstrip_ref.s2p
+
+OUTPUT_FILE Microstrip_ref_param1.s2p
+PARAMS
+w = 210.0
+END PARAMS
+
+OUTPUT_FILE Microstrip_ref_param2.s2p
+PARAMS
+w = 220.0
+END PARAMS
+
+OUTPUT_FILE Microstrip_ref_param3.s2p
+PARAMS
+w = 230.0
+END PARAMS
+
+OUTPUT_FILE Microstrip_ref_param4.s2p
+PARAMS
+w = 240.0
+END PARAMS
+
+OUTPUT_FILE Microstrip_ref_param5.s2p
+PARAMS
+w = 250.0
+END PARAMS
+
+END USER_FILE
