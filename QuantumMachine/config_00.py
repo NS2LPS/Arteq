@@ -69,6 +69,7 @@ config = {
             "operations": {
                 "cw": "const_pulse",
                 "readout": "readout_pulse",
+                "short_readout": "short_readout_pulse",          
             },
             "time_of_flight": time_of_flight,
             "smearing": 0,
