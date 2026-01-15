@@ -38,7 +38,6 @@ gaussian_wf = gaussian(0.1, 200, 40)
 #                  Config                   #
 #############################################
 config = {
-    "version": 1,
     "controllers": {
         "con1": {
             "analog_outputs": {
