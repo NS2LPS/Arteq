@@ -10,7 +10,7 @@ u = unit(coerce_to_integer=True)
 #                  Qubit                    #
 #############################################
 qubit_IF = 50 * u.MHz
-qubit_LO = 3819.25* u.MHz - qubit_IF
+qubit_LO =  3868.25 * u.MHz - qubit_IF
 
 # Continuous wave
 const_len = 100
@@ -43,11 +43,11 @@ y90_Q_wf = gaussian_pulse(rot_90_amp, rot_90_len, rot_90_sigma)
 #                Resonators                 #
 #############################################
 resonator_IF = 60 * u.MHz
-resonator_LO = 5929.3 *u.MHz - resonator_IF
+resonator_LO = 5930 *u.MHz - resonator_IF
 
 readout_len = 2000
 readout_delay = 0 # Skip the first points
-readout_amp = 0.1
+readout_amp = 0.125
 
 time_of_flight = 256 * u.ns
 depletion_time = 2 * u.us
@@ -130,7 +130,7 @@ config = {
                     "LO_frequency": qubit_LO,
                     "LO_source": "internal",
                     "output_mode": "always_on",
-                    "gain": 6,
+                    "gain": 3,
                 },
             },
             "RF_inputs": {
