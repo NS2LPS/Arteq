@@ -48,8 +48,8 @@ config = {
             },
             "digital_outputs": {3:{}},
             "analog_inputs": {
-                1: {"offset": 0.0, "gain_db": 0},  # I from down-conversion
-                2: {"offset": 0.0, "gain_db": 0},  # Q from down-conversion
+                1: {"offset": 0.012335, "gain_db": 0},  # I from down-conversion
+                2: {"offset": 0.009358, "gain_db": 0},  # Q from down-conversion
             },
         }
     },
