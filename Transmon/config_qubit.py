@@ -10,7 +10,8 @@ u = unit(coerce_to_integer=True)
 #                  Qubit                    #
 #############################################
 qubit_IF = 50 * u.MHz
-qubit_LO =  3868.25 * u.MHz - qubit_IF
+qubit_LO =  3868.18 * u.MHz - qubit_IF
+qubit_LO_gain = 6
 
 # Continuous wave
 const_len = 100
@@ -44,6 +45,7 @@ y90_Q_wf = gaussian_pulse(rot_90_amp, rot_90_len, rot_90_sigma)
 #############################################
 resonator_IF = 60 * u.MHz
 resonator_LO = 5930 *u.MHz - resonator_IF
+resonator_LO_gain = 7
 
 readout_len = 2000
 readout_delay = 0 # Skip the first points
@@ -124,13 +126,13 @@ config = {
                     "LO_frequency": resonator_LO,
                     "LO_source": "internal",
                     "output_mode": "always_on",
-                    "gain": 0,
+                    "gain": resonator_LO_gain,
                 },
                 2: {
                     "LO_frequency": qubit_LO,
                     "LO_source": "internal",
                     "output_mode": "always_on",
-                    "gain": 3,
+                    "gain": qubit_LO_gain,
                 },
             },
             "RF_inputs": {
@@ -269,6 +271,7 @@ with open('config_qubit.md','w') as f:
 
 - qubit_LO = {qubit_LO/1e6:.1f} MHz
 - qubit_IF = {qubit_IF/1e6:.1f} MHz
+- qubit_LO_gain = {qubit_LO_gain} dB
 
 #### Long square "saturation" pulse (`saturation`)
 
@@ -294,6 +297,7 @@ with open('config_qubit.md','w') as f:
 
 - resonator_LO = {resonator_LO/1e6:.1f} MHz  
 - resonator_IF = {resonator_IF/1e6:.1f} MHz
+- resonator_LO_gain = {resonator_LO_gain} dB
 
 #### Readout pulse (`readout`)
 
