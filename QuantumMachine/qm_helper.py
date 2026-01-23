@@ -1,7 +1,7 @@
 import zmq
 
 host = "127.0.0.1"
-port = "5555"
+port = "5556"
 
 # Creates a socket instance
 context = zmq.Context()
@@ -87,22 +87,22 @@ class QueueMonitor(threading.Thread):
         self.keeprunning = True
         self.joblist = []
         self.jobmax = 100
+        self.socket = context.socket(zmq.SUB)
+        self.socket.bind(f"tcp://{host}:{port}")
+        self.socket.subscribe("JOB")
     def run(self):
-        socket = context.socket(zmq.SUB)
-        socket.bind(f"tcp://{host}:{port}")
-        socket.subscribe("JOB")
         poller = zmq.Poller()
-        poller.register(socket, zmq.POLLIN)
+        poller.register(self.socket, zmq.POLLIN)
         while self.keeprunning:
             evts = dict(poller.poll(timeout=100))
-            if socket in evts:
-                topic = socket.recv_string()
-                job = socket.recv_json()
+            if self.socket in evts:
+                topic = self.socket.recv_string()
+                job = self.socket.recv_json()
                 self.joblist.append(job)
                 if len(self.joblist)>self.jobmax:
                     self.joblist.pop(0)
             self.parse_queue()
-        socket.close()
+        self.socket.close()
         self.output.append_stdout("Done\n")
     def stop(self):
         self.keeprunning = False
@@ -122,7 +122,7 @@ class QueueMonitor(threading.Thread):
                 return job
         return dict()
     @property
-    def self.killtime(self):
+    def killtime(self):
         return __killtime__[self.dropdown_kill.value]
     def parse_queue(self):
         try:
@@ -147,11 +147,19 @@ class QueueMonitor(threading.Thread):
                     table.append(f"""<tr><td>Running</td><td>{job.id}</td>
                     <td>{job_local.get("user","----")}</td>
                     <td>{waiting_time}</td></tr>""")
-                    if waiting_time > self.killtime:
-                        self.job.halt()
+                    if (time.time()-job_local['time']) > self.killtime:
+                        job.halt()
                 rows = " ".join(table)
                 self.job_table.value = f"<table>{rows}</table>"
             except:
                 self.job_table.value = "<p>Error while parsing the queue</p>"
         else:
             self.QM_label.value = "No QM running"
+
+def createQueueMonitor(*args):
+    try:
+        m = QueueMonitor(*args)
+    except:
+        print("Someone already is already listening, falling back to simple QueueMonitor")
+        m = QueueMonitorSimple(*args)
+    return m
