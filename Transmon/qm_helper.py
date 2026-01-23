@@ -76,12 +76,14 @@ class QueueMonitorSimple(threading.Thread):
         else:
             self.QM_label.value = "No QM running"
 
+__killtime__ = {"inf":1e10, "30s":30, "1min":60, "2min":120, "5min":300, }
 class QueueMonitor(threading.Thread):
-    def __init__(self, output, QM_label, job_table):
+    def __init__(self, output, QM_label, job_table, dropdown_kill):
         super().__init__()
         self.output = output
         self.job_table = job_table
         self.QM_label = QM_label
+        self.dropdown_kill = dropdown_kill
         self.keeprunning = True
         self.joblist = []
         self.jobmax = 100
@@ -119,6 +121,9 @@ class QueueMonitor(threading.Thread):
             if job_id==job['id'] and qm_id==job['qm_id'] and status==job['status']:
                 return job
         return dict()
+    @property
+    def self.killtime(self):
+        return __killtime__[self.dropdown_kill.value]
     def parse_queue(self):
         try:
             qm_list = qmm.list_open_qms()
@@ -142,6 +147,8 @@ class QueueMonitor(threading.Thread):
                     table.append(f"""<tr><td>Running</td><td>{job.id}</td>
                     <td>{job_local.get("user","----")}</td>
                     <td>{waiting_time}</td></tr>""")
+                    if waiting_time > self.killtime:
+                        self.job.halt()
                 rows = " ".join(table)
                 self.job_table.value = f"<table>{rows}</table>"
             except:
