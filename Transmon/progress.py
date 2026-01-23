@@ -9,7 +9,7 @@ import zmq
 import os
 
 host = "127.0.0.1"
-port = "5555"
+port = "5556"
 
 ctx = zmq.Context()
 socket = ctx.socket(zmq.PUB)

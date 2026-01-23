@@ -31,7 +31,7 @@ def calibrate_qm(output,cal_qubit=True,cal_resonator=True):
         print(f'{time.asctime()} QM is ready with id {qm.id}')
 
 class QueueMonitorSimple(threading.Thread):
-    def __init__(self, output, QM_label, job_table):
+    def __init__(self, output, QM_label, job_table, dropdown_kill):
         super().__init__()
         self.output = output
         self.job_table = job_table
@@ -136,18 +136,20 @@ class QueueMonitor(threading.Thread):
                 table = []
                 for job in qm.queue.pending_jobs:
                     job_local = self.search_job(job.id,qm.id,"pending")
-                    waiting_time = f"{int(time.time()-job_local['time'])}s" if job_local else "----"
+                    waiting_time = int(time.time()-job_local['time']) if job_local else None
+                    waiting_time_str = f"{waiting_time}s" if job_local else "----"
                     table.append(f"""<tr><td>Pending</td><td>{job.id}</td>
                     <td>{job_local.get("user","----")}</td>
-                    <td>{waiting_time}</td></tr>""")
+                    <td>{waiting_time_str}</td></tr>""")
                 job = qm.get_running_job()
                 if job:
                     job_local = self.search_job(job.id,qm.id,"running")
-                    waiting_time = f"{int(time.time()-job_local['time'])}s" if job_local else "----"
+                    waiting_time = int(time.time()-job_local['time']) if job_local else None
+                    waiting_time_str = f"{waiting_time}s" if job_local else "----"
                     table.append(f"""<tr><td>Running</td><td>{job.id}</td>
                     <td>{job_local.get("user","----")}</td>
-                    <td>{waiting_time}</td></tr>""")
-                    if (time.time()-job_local['time']) > self.killtime:
+                    <td>{waiting_time_str}</td></tr>""")
+                    if job_local and (waiting_time > self.killtime):
                         job.halt()
                 rows = " ".join(table)
                 self.job_table.value = f"<table>{rows}</table>"
