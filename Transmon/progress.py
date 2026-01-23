@@ -93,17 +93,17 @@ def addjob(qmprog, qm):
         time.sleep(0.1)
     # Wait until job is running
     time.sleep(0.1)
-    status = {"status":"pending", "time": time.time(), "user":os.environ["JUPYTERHUB_USER"], "id":job.id,}
+    status = {"status":"pending", "time": time.time(), "user":os.environ["JUPYTERHUB_USER"], "id":job.id, "qm_id":qm.id}
     socket.send_string("JOB", flags=zmq.SNDMORE)
     socket.send_json(status)
     while job.status=="pending":
         q = job.position_in_queue()
         if q>0:
-            print("Position in queue",q,end='\r')
+            print(job.id,"Position in queue",q,end='\r')
         time.sleep(0.1)
     job=job.wait_for_execution()
-    print("\nJob is running")
-    status = {"status":"running", "time": time.time(), "user":os.environ["JUPYTERHUB_USER"], "id":job.id,}
+    print(f"\nJob {job.id} is running")
+    status = {"status":"running", "time": time.time(), "user":os.environ["JUPYTERHUB_USER"], "id":job.id, "qm_id":qm.id}
     socket.send_string("JOB", flags=zmq.SNDMORE)
     socket.send_json(status)
     return job
