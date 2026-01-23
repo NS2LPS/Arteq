@@ -5,6 +5,16 @@ from matplotlib import pyplot as plt
 import numpy as np
 import config_qubit as config
 
+import zmq
+import os
+
+host = "127.0.0.1"
+port = "5555"
+
+ctx = zmq.Context()
+socket = ctx.socket(zmq.PUB)
+socket.connect(f"tcp://{host}:{port}")
+
 phase_delay = 290e-9
 
 # Real time monitoring and plotting function
@@ -83,6 +93,9 @@ def addjob(qmprog, qm):
         time.sleep(0.1)
     # Wait until job is running
     time.sleep(0.1)
+    status = {"status":"pending", "time": time.time(), "user":os.environ["JUPYTERHUB_USER"], "id":job.id,}
+    socket.send_string("JOB", flags=zmq.SNDMORE)
+    socket.send_json(status)
     while job.status=="pending":
         q = job.position_in_queue()
         if q>0:
@@ -90,6 +103,9 @@ def addjob(qmprog, qm):
         time.sleep(0.1)
     job=job.wait_for_execution()
     print("\nJob is running")
+    status = {"status":"running", "time": time.time(), "user":os.environ["JUPYTERHUB_USER"], "id":job.id,}
+    socket.send_string("JOB", flags=zmq.SNDMORE)
+    socket.send_json(status)
     return job
     
 def rescale(ax,data):
