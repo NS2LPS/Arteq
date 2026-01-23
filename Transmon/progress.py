@@ -84,7 +84,10 @@ def updatehist(pp, n_avg, job, results, ax, l_IQ0, l_IQ1):
             break
     job.halt()    
 
-def addjob(qmprog, qm):
+def addjob(qmprog, qmm):
+    qm_list =  qmm.list_open_qms()
+    qm = qmm.get_qm(qm_list[0])
+    print(f"Sending job to {qm.id}")
     # Send the QUA program to the OPX, which compiles and executes it
     job = qm.queue.add(qmprog)
     # Wait for job to be loaded

@@ -10,7 +10,10 @@ ctx = zmq.Context()
 socket = ctx.socket(zmq.PUB)
 socket.connect(f"tcp://{host}:{port}")
 
-def addjob(qmprog, qm):
+def addjob(qmprog, qmm):
+    qm_list =  qmm.list_open_qms()
+    qm = qmm.get_qm(qm_list[0])
+    print(f"Sending job to {qm.id}")
     # Send the QUA program to the OPX, which compiles and executes it
     job = qm.queue.add(qmprog)
     # Wait for job to be loaded
@@ -28,7 +31,7 @@ def addjob(qmprog, qm):
             print(job.id,"Position in queue",q,end='\r')
         time.sleep(0.1)
     job=job.wait_for_execution()
-    print(f"\nJob {job.id} is running")
+    print(f"\nJob {job.id} is running on {qm.id}")
     status = {"status":"running", "time": time.time(), "user":os.environ["JUPYTERHUB_USER"], "id":job.id, "qm_id":qm.id}
     socket.send_string("JOB", flags=zmq.SNDMORE)
     socket.send_json(status)
