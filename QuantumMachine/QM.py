@@ -163,6 +163,12 @@ class Job(threading.Thread):
         self.output.append_stdout("Job has finished\n")
         self.job_table.value = ""
 
+    def wait(self):
+        result_handles = self.job.result_handles
+        while result_handles.is_processing():
+            time.sleep(0.5)
+
+
 class JobSimple:
     def __init__(self, qmprog):
         """Create a QM job from a QUA program"""
