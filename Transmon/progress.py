@@ -1,19 +1,9 @@
 from IPython.display import display
 import ipywidgets as widgets
 import time
+import threading
 from matplotlib import pyplot as plt
 import numpy as np
-import config_qubit as config
-
-import zmq
-import os
-
-host = "127.0.0.1"
-port = "5556"
-
-ctx = zmq.Context()
-socket = ctx.socket(zmq.PUB)
-socket.connect(f"tcp://{host}:{port}")
 
 phase_delay = 290e-9
 
@@ -84,55 +74,86 @@ def updatehist(pp, n_avg, job, results, ax, l_IQ0, l_IQ1):
             break
     job.halt()    
 
-def addjob(qmprog, qmm):
-    qm_list =  qmm.list_open_qms()
-    qm = qmm.get_qm(qm_list[0])
-    print(f"Sending job to {qm.id}")
-    # Send the QUA program to the OPX, which compiles and executes it
-    job = qm.queue.add(qmprog)
-    # Wait for job to be loaded
-    while job.status=="loading":
-        print("Job is loading...")
-        time.sleep(0.1)
-    # Wait until job is running
-    time.sleep(0.1)
-    status = {"status":"pending", "time": time.time(), "user":os.environ["JUPYTERHUB_USER"], "id":job.id, "qm_id":qm.id}
-    socket.send_string("JOB", flags=zmq.SNDMORE)
-    socket.send_json(status)
-    while job.status=="pending":
-        q = job.position_in_queue()
-        if q>0:
-            print(job.id,"Position in queue",q,end='\r')
-        time.sleep(0.1)
-    job=job.wait_for_execution()
-    print(f"\nJob {job.id} is running")
-    status = {"status":"running", "time": time.time(), "user":os.environ["JUPYTERHUB_USER"], "id":job.id, "qm_id":qm.id}
-    socket.send_string("JOB", flags=zmq.SNDMORE)
-    socket.send_json(status)
-    return job
-    
-def rescale(ax,data):
+def rescale(line):
+    ax = line.axes
+    data = line.get_ydata()
     ymin,ymax=ax.get_ylim()
     dmin = data.min()
     dmax = data.max()
     delta = dmax-dmin
-    if dmin<ymin or dmax>ymax:
+    if dmin<ymin or dmax>ymax or delta>2*(ymax-ymin):
         ax.set_ylim(dmin-0.05*delta, dmax+0.05*delta)
         
-class ProgressPlot:
-    def __init__(self):
+class ProgressPlot(threading.Thread):
+    """
+    Real time plot to monitor a QM job
+    """
+    def __init__(self, job):
+        """Create real time plot to monitor a QM job
+            Parameter:
+            job: a running QM job
+            plot_init: function initializing the plot 
+
+            Optional parameter:
+            rotate=None : a function to rescale or rotate the data prior to plotting
+        """ 
+        super().__init__()
         self.progress = widgets.FloatProgress(value=0.0, min=0.0, max=1.0)
         self.progress_label = widgets.Label(value="??/??")
-        self.button = widgets.Button(description='Abort',)
-        self.button.on_click(self.stop)
-        self.keeprunning = True
+        self.button_abort = widgets.Button(description='Abort',)
+        self.button_abort.on_click(self.abort_clicked)
+        self.output = widgets.Output()
+        self.abort = False
+        self.job = job
         with plt.ioff():
             self.fig = plt.figure()
-    def stop(self,b):
-        self.keeprunning = False
-    def update(self,i,total):
-        self.progress.value = float(i+1)/total
-        self.progress_label.value = f"{i+1}/{total}"
-        self.fig.canvas.draw_idle()
+        self.plot_init(self.fig)
+        self.show()
+        self.start()
+
+    def plot_init(self, fig):
+        pass
+
+    def plot_update(self):
+        pass
+
     def show(self):
-        display(self.fig.canvas,widgets.HBox([self.button,self.progress,self.progress_label]))
+        display(self.fig.canvas,widgets.HBox([self.button_abort,self.progress,self.progress_label]),self.output)
+        
+    def abort_clicked(self, button):
+        self.abort = True
+
+    def run(self):
+        while self.job.status=="pending":
+            time.sleep(0.1)
+            self.output.append_stdout(f"Position in queue {self.job.position_in_queue()} \r")
+            if self.abort:
+                self.job.cancel()
+                self.output.append_stdout("Job has been canceled\n")
+                return
+        t0 = time.time()
+        while self.job.status!="running" and self.job.status!="completed" :
+            time.sleep(0.1)
+            if time-time()-t0>2:
+                self.output.append_stdout("Job has been canceled\n")
+                return
+        if self.job.status=="running":
+            self.output.append_stdout("Job is running...               \n")
+        while self.job.status=="running":
+            time.sleep(0.1)
+            self.plot_update()
+            self.fig.canvas.draw_idle()
+            if self.abort:
+                self.job.halt()
+                self.output.append_stdout("Job has been halted\n")
+                return
+        self.output.append_stdout("Job has finished                 \n")
+        t0 = time.time()
+        while self.job.status!="completed" :
+            time.sleep(0.1)
+            if time-time()-t0>2:
+                break
+        self.plot_update()
+        self.fig.canvas.draw_idle()
+        
+
