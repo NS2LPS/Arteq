@@ -13,7 +13,7 @@ cluster_name = "Cluster_1"
 # QM address
 QM_Router_IP = "129.175.113.167"
 cluster_name = "Cluster_1"
-qmm = QuantumMachinesManager(host=QM_Router_IP, cluster_name=cluster_name, log_level="ERROR", octave_calibration_db_path=os.getcwd()) 
+qmm = QuantumMachinesManager(host=QM_Router_IP, cluster_name=cluster_name, log_level="ERROR",) 
 
 # Local address for queue monitoring
 host = "127.0.0.1"
@@ -94,7 +94,7 @@ class Job(threading.Thread):
 
     def get_results(self,*args):
         handles = [self.job.result_handles.get(arg) for arg in args]
-        return tuple(h.fetch_all() for h in handles)
+        return tuple(h.fetch_all(flat_struct=True) for h in handles)
             
     def show(self):
         display(self.button_abort, self.output, self.job_table)
@@ -193,7 +193,7 @@ class JobSimple:
     
     def get_results(self,*args):
         handles = [self.job.result_handles.get(arg) for arg in args]
-        return tuple(h.fetch_all() for h in handles)
+        return tuple(h.fetch_all(flat_struct=True) for h in handles)
 
     def __getattr__(self, attr):
         return getattr(self.job,attr) 
@@ -202,6 +202,7 @@ class JobSimple:
         result_handles = self.job.result_handles
         while result_handles.is_processing():
             time.sleep(0.5)
-        
+        print("Job finished")
+
 
 
