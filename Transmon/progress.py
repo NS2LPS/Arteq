@@ -92,10 +92,6 @@ class ProgressPlot(threading.Thread):
         """Create real time plot to monitor a QM job
             Parameter:
             job: a running QM job
-            plot_init: function initializing the plot 
-
-            Optional parameter:
-            rotate=None : a function to rescale or rotate the data prior to plotting
         """ 
         super().__init__()
         self.progress = widgets.FloatProgress(value=0.0, min=0.0, max=1.0)
