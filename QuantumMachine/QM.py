@@ -108,7 +108,7 @@ class Job(threading.Thread):
     def display(self, table):
         out = "<em>QM job list:</em><table>"
         for job in table:
-            waiting_time = f"{time.time()-job["time"]:.0f}" if job["time"] else "--"
+            waiting_time = f"{time.time()-job["time"]:.0f}" if job["time"] else "??"
             if job["id"]==self.job.id:
                 out += f"""<tr><td><b>{job["status"].capitalize()}</b></td><td><b>{job["id"]}</b></td><td><b>{job["user"] or os.environ["JUPYTERHUB_USER"]}</td><td><b>{waiting_time}s</b></td></tr>"""
             else:
